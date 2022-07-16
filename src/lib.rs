@@ -56,7 +56,9 @@ pub struct wbg_rayon_PoolBuilder {
 )]
 extern "C" {
     #[wasm_bindgen(js_name = startWorkers)]
-    fn start_workers(module: JsValue, memory: JsValue, builder: wbg_rayon_PoolBuilder) -> Promise;
+    fn start_workers(module: JsValue, memory: JsValue, builder: wbg_rayon_PoolBuilder, workers: JsValue) -> Promise;
+    #[wasm_bindgen(js_name = createSharedWorkers)]
+    fn create_shared_workers_js(module: JsValue, memory: JsValue, builder: wbg_rayon_PoolBuilder) -> Promise;
 }
 
 #[wasm_bindgen]
@@ -115,8 +117,20 @@ impl wbg_rayon_PoolBuilder {
 
 #[wasm_bindgen(js_name = initThreadPool)]
 #[doc(hidden)]
-pub fn init_thread_pool(num_threads: usize) -> Promise {
+pub fn init_thread_pool(num_threads: usize, workers: JsValue) -> Promise {
     start_workers(
+        wasm_bindgen::module(),
+        wasm_bindgen::memory(),
+        wbg_rayon_PoolBuilder::new(num_threads),
+        workers,
+    )
+}
+
+// TODO: Find a better way to re-export a JS function.
+#[wasm_bindgen(js_name = createSharedWorkers)]
+#[doc(hidden)]
+pub fn create_shared_workers(num_threads: usize) -> Promise {
+    create_shared_workers_js(
         wasm_bindgen::module(),
         wasm_bindgen::memory(),
         wbg_rayon_PoolBuilder::new(num_threads),
